@@ -1,0 +1,24 @@
+.container {
+}
+
+
+.d-inline-flex {
+
+}
+
+#createpost {
+}
+
+#avatar {
+    background-image: url('https://www.andalucialab.org/wp-content/uploads/2020/02/INSERTAR_LOGO2-768x576.jpg');
+    height: 125px;
+    width: 125px;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    border-radius: 50%;
+    background-size: auto 100%;
+}
+
+#allposts {
+    height: 400px;
+}

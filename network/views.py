@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 
@@ -61,3 +62,15 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+
+
+def new_post(request):
+
+    # request is POST?
+    if request.method != 'POST':
+        return JsonResponse({
+            'error': 'The request must be via POST'
+        })
+
+    

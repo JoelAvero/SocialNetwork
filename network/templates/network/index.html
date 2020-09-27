@@ -1,5 +1,78 @@
 {% extends "network/layout.html" %}
 
 {% block body %}
-    TODO
+
+    <!-- parte que deberia quedar quieta -->
+    <div class="container-fluid">
+        <div class="row">
+
+            <!-- lado izquierdo avatar info user -->
+            <div class="col-3 border">
+                <div class="container" id="containeruser">
+                    <div class="row">
+
+                        <div class="col-4">
+                            <div id="avatar" class="d-inline-flex shadow bg-white rounded-circle"></div>
+                        </div>
+
+                        <div class="col-8 text-justify align-self-baseline">
+                            <h5>Nombre</h5>
+                            <p>HOla soy un parrafo</p>
+                        </div>
+
+                    </div>    
+                </div>
+            </div>
+
+            <!-- zona de post -->
+            <div class="col-6 border">
+                <div class="container-fluid" id="createpost">
+                    <div class="row">
+
+                        <div class="col-12">
+                            <h1>New Post:</h1>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-group">
+                                <textarea name="newpost" id="newpost" class="form-control" placeholder="What are you feeling?"></textarea>
+                                <button type="submit" class="btn btn-primary float-right">Post</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- parte que deberia poder ser scrolleada -->
+    <div class="container-fluid">
+        <div class="row">
+
+            <!-- no se usa -->
+            <div class="col-3"></div>
+
+            <!-- zona de post -->
+            <div class="col-6 border">
+                <div class="container-fluid" id="createpost">
+                    <div class="row">
+
+                        <div class="col-12">
+                            
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
 {% endblock %}
