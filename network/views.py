@@ -1,14 +1,17 @@
+import json
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
 
-from .models import User
+from .models import User, Post, Follow, Likes
 
 
 def index(request):
+    
     return render(request, "network/index.html")
 
 
@@ -64,13 +67,30 @@ def register(request):
         return render(request, "network/register.html")
 
 
-
+@csrf_exempt
 def new_post(request):
 
     # request is POST?
     if request.method != 'POST':
-        return JsonResponse({
-            'error': 'The request must be via POST'
-        })
+        return JsonResponse({'error': 'The request must be via POST'})
 
-    
+    data = json.loads(request.body)
+    print(data)
+    body = data.get('body','')
+    post = Post(
+        post = body,
+        fk_user = request.user
+    )
+    post.save()
+
+    return JsonResponse({"message": "All good!."})
+
+
+
+def get_posts(request):
+    postlist = []
+    posts = Post.objects.all()
+    for i in posts:
+        postlist.append(Post.serialize(i))
+        
+    return JsonResponse(postlist, safe=False)

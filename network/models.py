@@ -12,6 +12,15 @@ class Post(models.Model):
     fk_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='thispublisher')
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    def serialize(self):
+        return {
+            "username": self.fk_user.username,
+            "firstname": self.fk_user.first_name,
+            "lastname": self.fk_user.last_name,
+            "post": self.post,
+            "date": self.timestamp
+        }
+
 
 class Follow(models.Model):
     

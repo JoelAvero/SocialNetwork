@@ -1,13 +1,4 @@
-.container {
-}
 
-
-.d-inline-flex {
-
-}
-
-#createpost {
-}
 
 #avatar {
     background-image: url('https://www.andalucialab.org/wp-content/uploads/2020/02/INSERTAR_LOGO2-768x576.jpg');
@@ -19,6 +10,25 @@
     background-size: auto 100%;
 }
 
+#miniavatar {
+    background-image: url('https://ep01.epimg.net/elpais/imagenes/2019/05/02/gente/1556804013_342866_1556804719_noticia_normal.jpg');
+    height: 60px;
+    width: 60px;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    border-radius: 50%;
+    background-size: auto 100%;
+}
+
+
 #allposts {
     height: 400px;
+}
+
+#postname {
+    font-size: 14px;
+}
+
+#postusername {
+    font-size: 16px;
 }
