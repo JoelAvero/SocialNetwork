@@ -18,7 +18,7 @@ class Post(models.Model):
             "firstname": self.fk_user.first_name,
             "lastname": self.fk_user.last_name,
             "post": self.post,
-            "date": self.timestamp
+            "date": self.timestamp.strftime("%b %-d %Y, %-I:%M %p")
         }
 
 

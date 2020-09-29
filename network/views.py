@@ -89,7 +89,7 @@ def new_post(request):
 
 def get_posts(request):
     postlist = []
-    posts = Post.objects.all()
+    posts = Post.objects.all().order_by('-timestamp')  #emails.order_by("-timestamp").all()
     for i in posts:
         postlist.append(Post.serialize(i))
         

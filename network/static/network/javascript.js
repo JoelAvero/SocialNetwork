@@ -51,18 +51,24 @@ function load_posts() {
                         <div class="col-12">
                             
                             <div class="media">
+
                                 <div class="text-center">
                                     <div id="miniavatar" class="d-inline-flex shadow bg-white rounded-circle"></div>
                                     <p id="postname"><strong>David Beckham</strong></p>
                                     <p id="postusername">${post.username}</p>
                                 </div>
+
                                     <div class="media-body border rounded">
                                         <p>${post.post}</p>
                                     </div>
-
+                                    
                                     <div class="d-flex" id="likes">
                                     </div>
 
+                            </div>
+
+                            <div class="text-right">
+                                <span>${post.date}</span>
                             </div>
 
                         </div>
