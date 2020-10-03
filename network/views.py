@@ -7,11 +7,11 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import User, Post, Follow, Likes
+from .models import User, Post, Follow, Like
 
 
-def index(request):
-    
+def index(request):    
+
     return render(request, "network/index.html")
 
 
@@ -89,8 +89,94 @@ def new_post(request):
 
 def get_posts(request):
     postlist = []
-    posts = Post.objects.all().order_by('-timestamp')  #emails.order_by("-timestamp").all()
+    posts = Post.objects.all().order_by('-timestamp')
     for i in posts:
         postlist.append(Post.serialize(i))
         
     return JsonResponse(postlist, safe=False)
+
+
+
+def get_post(request, post_id):
+    
+    post = Post.objects.get(id=post_id)
+    return JsonResponse(Post.serialize(post), safe=False)
+
+
+
+@csrf_exempt
+def new_like(request):
+
+    # userid = request.user.id
+
+    if request.method == 'GET':
+        return HttpResponseRedirect(reverse("index"))
+
+    data = json.loads(request.body)
+    postid = data.get("postid", "")
+    liketype = data.get("liketype", "")
+    postobj = Post.objects.get(id=postid)
+
+    if liketype == "like":
+        # existe un like de este usuario en este post?
+        if Like.objects.filter(fk_post=postobj, fk_userliked=request.user):
+            print('instancio')
+            thispost = Like.objects.get(fk_userliked=request.user)
+            # existe, ¿era un like?
+            if thispost.like == True:
+                
+                # era un like, quiere sacar el like
+                print('Borro')
+                thispost.delete()
+            
+            else:
+                # era un dislike, hay que cambiar el false por true
+                print('Edito')
+                thispost.like = True
+                thispost.save()
+            
+        # No existia ningun like, lo creo
+        else:
+            print('Creando')
+
+            like = Like(
+                fk_post = Post.objects.get(id=postid),
+                fk_userliked = request.user,
+                like = True
+            )
+            like.save()
+
+
+    if liketype == "dislike":
+        # existe un dislike de este usuario en este post?
+        if Like.objects.filter(fk_post=postobj, fk_userliked=request.user):
+            print('instancio')
+            thispost = Like.objects.get(fk_userliked=request.user)
+
+            # existe, ¿era un dislike?
+            if thispost.like == False:
+                
+                # era un dislike, quiere sacar el dislike
+                print('Borro')
+                thispost.delete()
+            
+            else:
+                # era un like, hay que cambiar el True por el False
+                print('Edito')
+                thispost.like = False
+                thispost.save()
+            
+        # No existia ningun like, lo creo
+        else:
+            print('Creando')
+
+            like = Like(
+                fk_post = Post.objects.get(id=postid),
+                fk_userliked = request.user,
+                like = False
+            )
+            like.save()
+    
+    return HttpResponseRedirect(reverse("index"))
+
+    
