@@ -88,11 +88,27 @@ def new_post(request):
 
 
 def get_posts(request):
+
     postlist = []
+    liketype = {}
     posts = Post.objects.all().order_by('-timestamp')
+    
     for i in posts:
-        postlist.append(Post.serialize(i))
         
+
+        if i.thispost.filter(fk_userliked=request.user):
+            # instance
+            getlike = i.thispost.get(fk_userliked=request.user)
+            if getlike.like == True:
+                liketype = {"liketype": "like"}
+            elif getlike.like == False:
+                liketype = {"liketype": "dislike"}
+        else:
+            liketype = {"liketype": "nolike"}
+        
+        postlist.append([Post.serialize(i),liketype])
+    
+
     return JsonResponse(postlist, safe=False)
 
 
@@ -100,7 +116,20 @@ def get_posts(request):
 def get_post(request, post_id):
     
     post = Post.objects.get(id=post_id)
-    return JsonResponse(Post.serialize(post), safe=False)
+    liketype = ""
+
+    if post.thispost.filter(fk_userliked=request.user):
+        # instance
+        getlike = post.thispost.get(fk_userliked=request.user)
+        if getlike.like == True:
+            liketype = "like"
+        elif getlike.like == False:
+            liketype = "dislike"
+    else:
+        liketype = "nolike"
+    
+
+    return JsonResponse([Post.serialize(post), {"status": liketype}], safe=False)
 
 
 
@@ -113,27 +142,32 @@ def new_like(request):
         return HttpResponseRedirect(reverse("index"))
 
     data = json.loads(request.body)
-    postid = data.get("postid", "")
+    postid = int(data.get("postid", ""))
     liketype = data.get("liketype", "")
     postobj = Post.objects.get(id=postid)
+
 
     if liketype == "like":
         # existe un like de este usuario en este post?
         if Like.objects.filter(fk_post=postobj, fk_userliked=request.user):
-            print('instancio')
-            thispost = Like.objects.get(fk_userliked=request.user)
+            
+            thispost = Like.objects.get(fk_post=postobj, fk_userliked=request.user)
+
             # existe, ¿era un like?
             if thispost.like == True:
                 
                 # era un like, quiere sacar el like
-                print('Borro')
                 thispost.delete()
+
+                return JsonResponse({"result": "delete", "like":"like"})
             
             else:
                 # era un dislike, hay que cambiar el false por true
                 print('Edito')
                 thispost.like = True
                 thispost.save()
+
+                return JsonResponse({"result": "change", "like":"like"})
             
         # No existia ningun like, lo creo
         else:
@@ -146,27 +180,34 @@ def new_like(request):
             )
             like.save()
 
+            return JsonResponse({"result": "like", "like":"like"})
+    
 
     if liketype == "dislike":
         # existe un dislike de este usuario en este post?
+        
         if Like.objects.filter(fk_post=postobj, fk_userliked=request.user):
-            print('instancio')
-            thispost = Like.objects.get(fk_userliked=request.user)
-
-            # existe, ¿era un dislike?
+            
+            thispost = Like.objects.get(fk_post=postobj, fk_userliked=request.user)
+            
+            # existe, ¿era un dislike? 
             if thispost.like == False:
-                
+
                 # era un dislike, quiere sacar el dislike
                 print('Borro')
                 thispost.delete()
+
+                return JsonResponse({"result": "delete", "like":"dislike"})
             
             else:
                 # era un like, hay que cambiar el True por el False
                 print('Edito')
                 thispost.like = False
                 thispost.save()
+
+                return JsonResponse({"result": "change", "like":"dislike"})
             
-        # No existia ningun like, lo creo
+        # No existia ningun dislike, lo creo
         else:
             print('Creando')
 
@@ -176,6 +217,8 @@ def new_like(request):
                 like = False
             )
             like.save()
+
+            return JsonResponse({"result": "dislike", "like":"dislike"})
     
     return HttpResponseRedirect(reverse("index"))
 

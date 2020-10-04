@@ -21,7 +21,7 @@ class Post(models.Model):
             "post": self.post,
             "date": self.timestamp.strftime("%b %-d %Y, %-I:%M %p"),
             "likes": len(self.thispost.filter(like=True)),
-            "dislikes": len(self.thispost.filter(like=False))
+            "dislikes": len(self.thispost.filter(like=False)),
         }
 
 

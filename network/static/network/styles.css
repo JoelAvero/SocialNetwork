@@ -32,3 +32,16 @@
 #postusername {
     font-size: 16px;
 }
+
+
+.buttonlike, .buttondislike {
+    height: 25px;
+}
+
+.buttonlikeon {
+    filter: invert(0.4) sepia(1) hue-rotate(50deg) saturate(1000%);
+}
+
+.buttonlikeoff {
+    filter: invert(0.4) sepia(1) hue-rotate(-50deg) saturate(1000%);
+}

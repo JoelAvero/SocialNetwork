@@ -4,34 +4,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     document.querySelector('#formpost').addEventListener('submit', send_post);
 
-    /*
-    document.querySelector("#allpostshere").addEventListener('click', e => {
-        const likebuttons = document.querySelectorAll("#buttonlike");
-        const dislikebuttons = document.querySelectorAll("#buttondislike");
-        
-        likebuttons.forEach(likehere => {
-            likehere.onclick = () => {
-                like(likehere.value);
-            }
-        })
     
-    })
-    */
-    
-    $('body').on("click","#buttonlike", function(e) {
-        like(e.target.value, "like");
+    $('body').on("click",".buttonlike", function(e) {
+        like(e.target.id, "like");
     })
     
-    $('body').on("click","#buttondislike", function(e) {
-        like(e.target.value, "dislike");
+    $('body').on("click",".buttondislike", function(e) {
+        like(e.target.id, "dislike");
     })
 
 
     load_posts();
 })
     
-    
-
 
 
 function send_post(e){
@@ -73,43 +58,63 @@ function load_posts() {
     .then(posts => {
 
         posts.forEach(post => {
+            
+            let status
+
+            switch(post[1].liketype){
+
+                case "like":
+                    status = "buttonlikeon"
+                    break
+
+                case "dislike":
+                    status = "buttonlikeoff"
+                    break
+
+                case "nolike":
+                    status = ""
+                    break
+            };
+            console.log(status);
 
             container.append(
                 `
                 
                 <div class="container-fluid border">
-                    <div class="row">
-                        <div class="col-12">
-                            
-                            <div class="media">
-
-                                <div class="text-center">
-                                    <div id="miniavatar" class="d-inline-flex shadow bg-white rounded-circle"></div>
-                                    <p id="postname"><strong>David Beckham</strong></p>
-                                    <p id="postusername">/${post.username}</p>
+                                <div class="row">
+                                    <div class="col-12">
+                                        
+                                        <div class="media">
+            
+                                            <div class="text-center">
+                                                <div id="miniavatar" class="d-inline-flex shadow bg-white rounded-circle"></div>
+                                                <p id="postname"><strong>David Beckham</strong></p>
+                                                <p id="postusername">/${post[0].username}</p>
+                                                
+                                            </div>
+            
+                                                <div class="media-body border rounded">
+                                                    <p>${post[0].post}</p>
+                                                </div>
+                                                
+                                                <div class="" id="likes">
+                                                    <img class="buttonlike ${status == "buttonlikeon" ? status : ''}" id="${post[0].id}" src="/static/network/like.png" alt="">
+                                                    <span id="likescounter${post[0].id}">${post[0].likes}</span>
+                                                    <br>
+                                                    <img class="buttondislike ${status == "buttonlikeoff" ? status : '' }" id="${post[0].id}" src="/static/network/dislike.png" alt="">
+                                                    <span id="dislikescounter${post[0].id}">${post[0].dislikes}</span>
+                                                </div>
+            
+                                        </div>
+            
+                                        <div class="text-right">
+                                            <span>${post[0].date}</span>
+                                        </div>
+            
+                                    </div>
                                 </div>
-
-                                    <div class="media-body border rounded">
-                                        <p>${post.post}</p>
-                                    </div>
-                                    
-                                    <div class="d-flex" id="likes">
-                                        <button id="buttonlike" value="${post.id}">Like</button><br>
-                                        ${post.likes}
-                                        <button id="buttondislike" value="${post.id}">Dislike</button>
-                                        ${post.dislikes}
-                                    </div>
-
                             </div>
 
-                            <div class="text-right">
-                                <span>${post.date}</span>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-                
 
                 `
                 )
@@ -118,29 +123,88 @@ function load_posts() {
 
     })
 
+
 }
 
 
 function like(id, liketype) {
     
-    
+
     fetch('/newlike', {
         method: 'POST',
         body: JSON.stringify({
             postid: id,
             liketype: liketype
         })
-    });
+    })
+    .then(result => result.json())
+    .then(data => {
+
+        if (data.like == "like"){
+
+            let boton = $(`#${id}.buttonlike`);
+            let boton2 = $(`#${id}.buttondislike`);
+            let likespan = $(`#likescounter${id}`);
+            let dislikespan = $(`#dislikescounter${id}`);
+            
+            
+            switch(data.result){
+
+                case "change":
+                    boton2.removeClass("buttonlikeoff");
+                    boton.addClass("buttonlikeon");
+                    dislikespan.text(`${Number($(`#dislikescounter${id}`).text()) - 1}`)
+                    likespan.text(`${Number($(`#likescounter${id}`).text()) + 1}`)
+                    
+                    break
+
+                case "like":
+                    boton.addClass("buttonlikeon");
+                    likespan.text(`${Number($(`#likescounter${id}`).text()) + 1}`)
+                    break
+                
+                case "delete":
+                    boton.removeClass("buttonlikeon");
+                    likespan.text(`${Number($(`#likescounter${id}`).text()) - 1}`);
+                    break
+            };
+
+
+        } else {
+            let boton2 = $(`#${id}.buttonlike`);
+            let boton = $(`#${id}.buttondislike`);
+            let likespan = $(`#likescounter${id}`);
+            let dislikespan = $(`#dislikescounter${id}`);
+            switch(data.result){
+
+                case "change":
+                    boton2.removeClass("buttonlikeon");
+                    boton.addClass("buttonlikeoff");
+                    likespan.text(`${Number($(`#likescounter${id}`).text()) - 1}`);
+                    dislikespan.text(`${Number($(`#dislikescounter${id}`).text()) + 1}`);
+                    break
+
+                case "dislike":
+                    boton.addClass("buttonlikeoff");
+                    dislikespan.text(`${Number($(`#dislikescounter${id}`).text()) + 1}`);
+                    break
+                
+                case "delete":
+                    boton.removeClass("buttonlikeoff");
+                    dislikespan.text(`${Number($(`#dislikescounter${id}`).text()) - 1}`);
+                    break
+            }
+        }
+
+    })
 
 }
+
+
 
 // Cuando el texto del post no tiene espacios, se sobrepasa del contenedor ver wordwrap
 
 // Validar los caracteres maximos del post en el back tambien
 
-// para los likes, se podria pasar un segundo argumento a la funcion like, si es un like o un dislike ocn el fin de usar solo una funcion para manejar los dos estados
 
-/* el backend decidira que hace con los likes, solo recibe si fue un like o un dislike y procesa la base de datos
-    una vez procesado, responde (quiza con un estado) y el front end, con ese estado pone corazon, o lo saca, y actuaaliza el contador
-    hay que ver como hacer eso, quiza creando una apì para los likes o algo asi.
-*/
+// hay que buscar la forma de que los estados de likes se guarden para cada usuario
