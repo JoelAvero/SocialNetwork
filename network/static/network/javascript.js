@@ -1,7 +1,7 @@
 
 document.addEventListener('DOMContentLoaded', function() {
-
     
+
     document.querySelector('#formpost').addEventListener('submit', send_post);
 
     
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     })
 
 
-    load_posts();
+    
 })
     
 
@@ -38,27 +38,38 @@ function send_post(e){
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data);
+
     })
     .catch(err => {
-        console.log(err);
+
     });
 
     $('#bodypost').val('');
-    load_posts();
+    
 }
 
 
-function load_posts() {
+function load_posts(requestedposts){
 
     let container = $('#allpostshere')
+    
+    container.text("")
 
-    fetch('/getposts')
-    .then(resp => resp.json())
+    if(requestedposts == "all" || requestedposts == "following"){
+        document.querySelector("#formlayer").style.display = "block";
+        document.querySelector("#profilelayer").style.display = "none";
+    } else {
+        document.querySelector("#profilelayer").style.display = "block";
+        document.querySelector("#formlayer").style.display = "none";
+    }
+
+    fetch(`getposts/${requestedposts}`)
+    .then(response => response.json())
     .then(posts => {
-
+        
         posts.forEach(post => {
             
+
             let status
 
             switch(post[1].liketype){
@@ -75,7 +86,7 @@ function load_posts() {
                     status = ""
                     break
             };
-            console.log(status);
+            
 
             container.append(
                 `
@@ -115,15 +126,13 @@ function load_posts() {
                                 </div>
                             </div>
 
-
                 `
                 )
-
         })
-
+        
     })
 
-
+    
 }
 
 
@@ -206,5 +215,3 @@ function like(id, liketype) {
 
 // Validar los caracteres maximos del post en el back tambien
 
-
-// hay que buscar la forma de que los estados de likes se guarden para cada usuario

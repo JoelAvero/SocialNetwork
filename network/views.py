@@ -75,7 +75,6 @@ def new_post(request):
         return JsonResponse({'error': 'The request must be via POST'})
 
     data = json.loads(request.body)
-    print(data)
     body = data.get('body','')
     post = Post(
         post = body,
@@ -86,30 +85,91 @@ def new_post(request):
     return JsonResponse({"message": "All good!."})
 
 
-
-def get_posts(request):
-
-    postlist = []
-    liketype = {}
-    posts = Post.objects.all().order_by('-timestamp')
+def get_posts(request, postedby):
     
-    for i in posts:
-        
+    if postedby == "all":
 
-        if i.thispost.filter(fk_userliked=request.user):
-            # instance
-            getlike = i.thispost.get(fk_userliked=request.user)
-            if getlike.like == True:
-                liketype = {"liketype": "like"}
-            elif getlike.like == False:
-                liketype = {"liketype": "dislike"}
-        else:
-            liketype = {"liketype": "nolike"}
+        # returnar todos los posts
+        postlist = []
+        liketype = {}
+        posts = Post.objects.all().order_by('-timestamp')
         
-        postlist.append([Post.serialize(i),liketype])
+        for i in posts:
+            
+            if request.user.is_authenticated and i.thispost.filter(fk_userliked=request.user):
+                
+                # instance
+                getlike = i.thispost.get(fk_userliked=request.user)
+                if getlike.like == True:
+                    liketype = {"liketype": "like"}
+                elif getlike.like == False:
+                    liketype = {"liketype": "dislike"}
+            else:
+                liketype = {"liketype": "nolike"}
+            
+            postlist.append([Post.serialize(i),liketype])
+        
+        return JsonResponse(postlist, safe=False)
+
+    elif postedby == "following":
+
+        # returnar los post de los usuarios que sigue
+        postlist = []
+        liketype = {}
+        users = User.objects.all()
+        following = Follow.objects.filter(fk_follower=request.user)
     
+        
+        for i in following:
+            followeds = i.fk_followed.thispublisher.all()
+            for j in followeds:
 
-    return JsonResponse(postlist, safe=False)
+                if j.thispost.filter(fk_userliked=request.user):
+                    # instance
+                    getlike = j.thispost.get(fk_userliked=request.user)
+                    if getlike.like == True:
+                        liketype = {"liketype": "like"}
+                    elif getlike.like == False:
+                        liketype = {"liketype": "dislike"}
+                else:
+                    liketype = {"liketype": "nolike"}
+                
+                postlist.append([Post.serialize(j),liketype])
+
+
+        return JsonResponse(postlist, safe=False)
+
+    else:
+        try:
+            user = User.objects.get(username = postedby)
+            print("aqui")
+            posts = user.thispublisher.all()
+            postlist = []
+            liketype = {}
+            
+            for i in posts:
+                
+
+                if i.thispost.filter(fk_userliked=request.user):
+                    # instance
+                    getlike = i.thispost.get(fk_userliked=request.user)
+                    if getlike.like == True:
+                        liketype = {"liketype": "like"}
+                    elif getlike.like == False:
+                        liketype = {"liketype": "dislike"}
+                else:
+                    liketype = {"liketype": "nolike"}
+                
+                postlist.append([Post.serialize(i),liketype])
+            
+
+            return JsonResponse(postlist, safe=False)
+
+
+
+        except:
+            
+            return JsonResponse({"response": "User not found"})
 
 
 
@@ -223,3 +283,32 @@ def new_like(request):
     return HttpResponseRedirect(reverse("index"))
 
     
+
+@csrf_exempt
+def user_profile(request, user_name):
+    
+    user = User.objects.filter(username=user_name)
+    
+    if user:
+        this_user = User.objects.get(username=user_name)
+        return render(request, 'network/profile.html', {
+            "thisuser": this_user})
+        
+    return HttpResponseRedirect(reverse('index'))
+
+@csrf_exempt
+def get_profile(request):
+
+    data = json.loads(request.body)
+    username = data.get('username', '')
+    print(username)
+    try:
+        user = User.objects.get(username=username)
+        posts = user.thispublisher.all()
+    except:
+        pass
+
+    for i in posts:
+        print(i)
+
+    pass

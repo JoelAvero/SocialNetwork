@@ -3,7 +3,7 @@
 {% block body %}
 
     <!-- parte que deberia quedar quieta -->
-    <div class="container-fluid">
+    <div class="container-fluid" id="formlayer">
         <div class="row">
 
             <!-- lado izquierdo avatar info user -->
@@ -50,6 +50,42 @@
 
     </div>
 
+    <div class="container-fluid" id="profilelayer">
+        <div class="row">
+
+            <!-- lado izquierdo avatar info user -->
+            <div class="col-3 border">
+                
+            </div>
+
+            <!-- zona de createpost -->
+            <div class="col-6 border">
+                <div class="container-fluid" id="createpost">
+                    <div class="row">
+
+                        
+                        <div class="col-3">
+                            <div id="avatarprofile" class="d-inline-flex shadow bg-white rounded-circle"></div>
+                        </div>
+                        <div class="col-7">
+                            <h1 id="usernamearg">{{ thisuser.username }}</h1>
+                            <h6>usuario</h6>
+                        </div>
+                        <div class="col-2">
+
+                            <p>Followers: </p>
+                            <p>Following: </p>
+                            <button>Follow</button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
 
 
 
@@ -72,4 +108,8 @@
 
     </div>
 
+{% endblock %}
+
+{% block script %}
+<script src="{% static 'network/javascript.js' %}"></script>
 {% endblock %}

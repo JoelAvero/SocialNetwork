@@ -20,6 +20,15 @@
     background-size: auto 100%;
 }
 
+#avatarprofile {
+    background-image: url('https://ep01.epimg.net/elpais/imagenes/2019/05/02/gente/1556804013_342866_1556804719_noticia_normal.jpg');
+    height: 200px;
+    width: 200px;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    border-radius: 50%;
+    background-size: auto 100%;
+}
 
 #allposts {
     height: 400px;
