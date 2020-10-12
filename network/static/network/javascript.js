@@ -1,10 +1,29 @@
 
 document.addEventListener('DOMContentLoaded', function() {
+    const thisuser = $("#thisusernav").text()
+    
+    $("#navuser").on("click", e => {
+        console.log(e.data);
+        load_posts(thisuser);
+        get_user(thisuser)
+    });
+
+    $("#navfollowing").on("click", e =>{
+        e.preventDefault();
+        load_posts("following")
+    })
+
+    $("#formpost").on('submit', send_post);
+
+
+    $("body").on("click","#postusername", e => {
+        console.log(e.target.title);
+        load_posts(e.target.title);
+        get_user(e.target.title);
+    })
     
 
-    document.querySelector('#formpost').addEventListener('submit', send_post);
 
-    
     $('body').on("click",".buttonlike", function(e) {
         like(e.target.id, "like");
     })
@@ -14,7 +33,10 @@ document.addEventListener('DOMContentLoaded', function() {
     })
 
 
-    
+    $("#buttonfollow").on("click", follow)
+
+
+    load_posts("all");
 })
     
 
@@ -99,8 +121,8 @@ function load_posts(requestedposts){
             
                                             <div class="text-center">
                                                 <div id="miniavatar" class="d-inline-flex shadow bg-white rounded-circle"></div>
-                                                <p id="postname"><strong>David Beckham</strong></p>
-                                                <p id="postusername">/${post[0].username}</p>
+                                                <p id="postname"><strong>${post[0].firstname + " " + post[0].lastname}</strong></p>
+                                                <p id="postusername" title="${post[0].username}">/${post[0].username}</p>
                                                 
                                             </div>
             
@@ -133,6 +155,25 @@ function load_posts(requestedposts){
     })
 
     
+}
+
+
+function get_user(user){
+
+    
+
+    fetch(`profile/${user}`,{
+        method: "POST"
+    })
+    .then(response => response.json())
+    .then(data => {
+        $("#fullnamedesc").text(data.fullname);
+        $("#usernamedesc").text(data.username);
+        $("#followersdesc").text(data.followers);
+        $("#followingdesc").text(data.following);
+
+    })
+
 }
 
 
@@ -209,6 +250,50 @@ function like(id, liketype) {
 
 }
 
+
+
+function follow(){
+
+    const follower = $("#thisusernav").text();
+    const followed = $("#usernamedesc").text();
+
+    fetch("follow", {
+        method: "POST",
+        body: JSON.stringify({
+            follower: follower,
+            followed: followed
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+        let followers = $("#followersdesc")
+        let following = $("#followingdesc")
+        let buttonfollow = $("buttonfollow")
+
+
+        switch(data.message){
+
+            case "sameuser":
+                break
+            
+            case "delete":
+                followers.text(`${Number(followers.text()) - 1}`);
+                break
+
+            case "successful":
+                followers.text(`${Number(followers.text()) + 1}`);
+                break
+
+            case "error":
+                console.log("an error ocurred");
+                break
+
+        }
+
+    })
+
+}
 
 
 // Cuando el texto del post no tiene espacios, se sobrepasa del contenedor ver wordwrap

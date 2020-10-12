@@ -54,3 +54,9 @@
 .buttonlikeoff {
     filter: invert(0.4) sepia(1) hue-rotate(-50deg) saturate(1000%);
 }
+
+.pholder::placeholder{
+    color: red;
+    opacity: 1;
+    font-weight: bold;
+}
