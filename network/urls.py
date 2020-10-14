@@ -12,9 +12,8 @@ urlpatterns = [
     path("follow", views.follow, name="follow"),
 
     # API
-    #path("getprofile", views.get_profile, name="getprofile"),
     path("post", views.new_post, name="post"),
-    path("getposts/<str:postedby>", views.get_posts, name="getposts"),
+    path("getposts/<str:postedby>/<int:page>", views.get_posts, name="getposts"),
     path("getpost/<int:post_id>", views.get_post, name="getpost"),
     path("newlike", views.new_like, name="newlike")
 ]

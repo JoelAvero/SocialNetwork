@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator
 
 from .models import User, Post, Follow, Like
 
@@ -94,7 +95,7 @@ def new_post(request):
     return JsonResponse({"message": "All good!."})
 
 
-def get_posts(request, postedby):
+def get_posts(request, postedby, page):
     
     if postedby == "all":
 
@@ -103,6 +104,7 @@ def get_posts(request, postedby):
         liketype = {}
         posts = Post.objects.all().order_by('-timestamp')
         
+
         for i in posts:
             
             if request.user.is_authenticated and i.thispost.filter(fk_userliked=request.user):
@@ -118,7 +120,12 @@ def get_posts(request, postedby):
             
             postlist.append([Post.serialize(i),liketype])
         
-        return JsonResponse(postlist, safe=False)
+        paginatedposts = Paginator(postlist,2)
+        ppost = paginatedposts.page(page)
+        numpages = paginatedposts.num_pages
+        response = [ppost.object_list,numpages]
+
+        return JsonResponse(response, safe=False)
 
     
     elif postedby == "following":
@@ -128,6 +135,8 @@ def get_posts(request, postedby):
         liketype = {}
         users = User.objects.all()
         
+        
+
         try:
             following = Follow.objects.filter(fk_follower=request.user)
             for i in following:
@@ -145,8 +154,13 @@ def get_posts(request, postedby):
                         liketype = {"liketype": "nolike"}
                     
                     postlist.append([Post.serialize(j),liketype])
+            print(postlist)
+            paginatedposts = Paginator(postlist,2)
+            ppost = paginatedposts.page(page)
+            numpages = paginatedposts.num_pages
+            response = [ppost.object_list,numpages]
 
-            return JsonResponse(postlist, safe=False)
+            return JsonResponse(response, safe=False)
         
         except:
             return HttpResponseRedirect(reverse("index"))
@@ -173,8 +187,15 @@ def get_posts(request, postedby):
                         liketype = {"liketype": "nolike"}
 
                     postlist.append([Post.serialize(i),liketype])
+
+                paginatedposts = Paginator(postlist,2)
+                ppost = paginatedposts.page(page)
+                numpages = paginatedposts.num_pages
+                response = [ppost.object_list,numpages]
+
+                return JsonResponse(response, safe=False)
                 
-                return JsonResponse(postlist, safe=False)
+                
             
             except:
                 return JsonResponse({"response": "User not found"})
@@ -183,14 +204,20 @@ def get_posts(request, postedby):
 
 
 
-        
-
-
-
+@csrf_exempt
 def get_post(request, post_id):
     
     post = Post.objects.get(id=post_id)
     liketype = ""
+
+    if request.method == "PUT":
+        data = json.loads(request.body)
+        textpost = data.get("post", "")
+        post = Post.objects.get(id=post_id)
+        post.post = textpost
+        post.save()
+
+        return JsonResponse({"text": textpost})
 
     if post.thispost.filter(fk_userliked=request.user):
         # instance
@@ -307,7 +334,7 @@ def user_profile(request, user_name):
         if user:
             
             this_user = User.objects.get(username=user_name)
-            print(this_user)
+            
             return JsonResponse({
                 "fullname": this_user.get_full_name(),
                 "username": this_user.username,
@@ -318,25 +345,6 @@ def user_profile(request, user_name):
     return HttpResponseRedirect(reverse('index'))
 
 
-
-'''
-@csrf_exempt
-def get_profile(request):
-
-    data = json.loads(request.body)
-    username = data.get('username', '')
-    print(username)
-    try:
-        user = User.objects.get(username=username)
-        posts = user.thispublisher.all()
-    except:
-        pass
-
-    for i in posts:
-        print(i)
-
-    pass
-'''
 
 @csrf_exempt
 def follow(request):

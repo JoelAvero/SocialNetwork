@@ -10,18 +10,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
     $("#navfollowing").on("click", e =>{
         e.preventDefault();
-        load_posts("following")
+        load_posts("following",1)
     })
 
     $("#formpost").on('submit', send_post);
 
 
     $("body").on("click","#postusername", e => {
-        console.log(e.target.title);
-        load_posts(e.target.title);
+        
+        load_posts(e.target.title,1);
         get_user(e.target.title);
     })
     
+
+
+    $("body").on("click",".editbutton", e => {
+
+        edit_post(e.target.title);
+
+    })
+
+
+
+    $("#postspaginator").on("click",e => {
+        console.log(e.target.text);
+    })
+
+
+    $("#postspaginator").on("click", "#pagelink", e => {
+        e.preventDefault()
+        
+        load_posts("all",e.target.text)
+    })
 
 
     $('body').on("click",".buttonlike", function(e) {
@@ -36,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
     $("#buttonfollow").on("click", follow)
 
 
-    load_posts("all");
+    load_posts("all",1);
 })
     
 
@@ -71,11 +91,13 @@ function send_post(e){
 }
 
 
-function load_posts(requestedposts){
+function load_posts(requestedposts, page){
 
-    let container = $('#allpostshere')
-    
-    container.text("")
+    const container = $('#allpostshere');
+    const paginator = $("#postspaginator");
+    paginator.text("")
+
+    container.text("");
 
     if(requestedposts == "all" || requestedposts == "following"){
         document.querySelector("#formlayer").style.display = "block";
@@ -85,12 +107,19 @@ function load_posts(requestedposts){
         document.querySelector("#formlayer").style.display = "none";
     }
 
-    fetch(`getposts/${requestedposts}`)
+    fetch(`getposts/${requestedposts}/${page}`)
     .then(response => response.json())
     .then(posts => {
-        
-        posts.forEach(post => {
+        console.log(posts);
+        posts[0].forEach(post => {
             
+            let user = $("#thisusernav").text();
+            let edit = "";
+
+            if(user == post[0].username){
+                edit = `<button class="editbutton" title="${post[0].id}" id='buttonedit${post[0].id}' title='${post[0].username}'>Edit</button>`
+            };
+
 
             let status
 
@@ -126,8 +155,9 @@ function load_posts(requestedposts){
                                                 
                                             </div>
             
-                                                <div class="media-body border rounded">
-                                                    <p>${post[0].post}</p>
+                                                <div id="post${post[0].id}" class="media-body border rounded">
+                                                    <textarea readonly title="${post[0].id}" class="textareapost" id="textareapost${post[0].id}">${post[0].post}</textarea>
+                                                    
                                                 </div>
                                                 
                                                 <div class="" id="likes">
@@ -136,6 +166,8 @@ function load_posts(requestedposts){
                                                     <br>
                                                     <img class="buttondislike ${status == "buttonlikeoff" ? status : '' }" id="${post[0].id}" src="/static/network/dislike.png" alt="">
                                                     <span id="dislikescounter${post[0].id}">${post[0].dislikes}</span>
+                                                    <br>
+                                                    <span id="spanbutton${post[0].id}">${edit}</span>
                                                 </div>
             
                                         </div>
@@ -150,17 +182,34 @@ function load_posts(requestedposts){
 
                 `
                 )
+                
         })
         
-    })
+        
 
+        for(i=1 ; i <= posts[1]; i++){
+            if(page == i){
+                paginator.append(
+                    `
+                    <li class="page-item active"><a class="page-link" id="pagelink" href="#">${i}</a></li>
+                    `
+                )
+            } else {
+                paginator.append(
+                    `
+                    <li class="page-item"><a class="page-link" id="pagelink" href="#">${i}</a></li>
+                    `
+                )
+            }
+            
+        };
+
+    })
     
 }
 
 
 function get_user(user){
-
-    
 
     fetch(`profile/${user}`,{
         method: "POST"
@@ -296,7 +345,50 @@ function follow(){
 }
 
 
+
+function edit_post(id){
+
+    const post = $(`#textareapost${id}`)
+    const buttoncontainer = $(`#spanbutton${id}`)
+    const button = $(`#buttonedit${id}`)
+
+    buttoncontainer.html(`<button class="editbutton" title="${id}" id='buttonsave${id}'>Save</button>`)
+    post.removeAttr("readonly")
+
+    const buttonsave = $(`#buttonsave${id}`)
+
+    buttonsave.on("click", () => {
+        
+        fetch(`getpost/${id}`, {
+            method: "PUT",
+            body: JSON.stringify({
+                post: post.val()
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            post.attr("readonly", true);
+            button.text("Edit");
+            post.text(data.text);
+            buttoncontainer.html(button)
+        });
+
+        
+    })
+    
+}
+
+
+
+
 // Cuando el texto del post no tiene espacios, se sobrepasa del contenedor ver wordwrap
 
 // Validar los caracteres maximos del post en el back tambien
 
+// Intentar hackear edit posts, simular peticion PUT con el id del post
+
+
+// ya funciona el paginador, hay que poner el control en el html y crear una funcion nueva en js que llame
+
+// la idea es crear el paginador dinamicamente de acuerdo al numero de posts disponibles

@@ -60,3 +60,10 @@
     opacity: 1;
     font-weight: bold;
 }
+
+.textareapost {
+    border: 0px;
+    resize: none;
+    width: 100%;
+}
+
