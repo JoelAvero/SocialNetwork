@@ -2,28 +2,47 @@
 document.addEventListener('DOMContentLoaded', function() {
     const thisuser = $("#thisusernav").text()
     
-    $("#navuser").on("click", e => {
-        console.log(e.data);
-        load_posts(thisuser);
-        get_user(thisuser)
-    });
-
-    $("#navfollowing").on("click", e =>{
-        e.preventDefault();
-        load_posts("following",1)
-    })
-
+    // event listener for new post
     $("#formpost").on('submit', send_post);
 
 
-    $("body").on("click","#postusername", e => {
+    // esto sirve para ir al perfil del usuario por medio de /#profile/username
+    window.onhashchange = () => {
+        const url = window.location.hash
+
+        if(url.indexOf("profile/") !== -1){
+            let user = url.substr(9)
+            load_posts(user,1);
+            get_user(user);
+        };
+
+    }
+
+
+    // esto sirve para ir al perfil del usuario logueado
+    $("#navuser").on("click", e => {
         
+        load_posts(thisuser,1);
+        get_user(thisuser)
+    });
+
+
+    // esto sirve para ver los posts de usuarios seguidos por el usuario logueado
+    $("#navfollowing").on("click", () =>{
+        
+        load_posts("following",1);
+    })
+
+
+    //esto sirve para ir al perfil del usuario que escribio el post
+    $("body").on("click","#postusername", e => {
+
         load_posts(e.target.title,1);
         get_user(e.target.title);
     })
     
 
-
+    // para editar el post, solo lo deberia ver el creador del post
     $("body").on("click",".editbutton", e => {
 
         edit_post(e.target.title);
@@ -31,63 +50,77 @@ document.addEventListener('DOMContentLoaded', function() {
     })
 
 
-
+/*    
     $("#postspaginator").on("click",e => {
         console.log(e.target.text);
     })
-
-
+*/
+    // controla el paginador, recupera el numero de pagina y lo envia a la funcion load_posts
     $("#postspaginator").on("click", "#pagelink", e => {
         e.preventDefault()
         
-        load_posts("all",e.target.text)
+        load_posts(e.target.title,e.target.text)
     })
 
 
-    $('body').on("click",".buttonlike", function(e) {
+    // like
+    $('body').on("click",".buttonlike", e => {
         like(e.target.id, "like");
     })
-    
-    $('body').on("click",".buttondislike", function(e) {
+    // dislike
+    $('body').on("click",".buttondislike", e => {
         like(e.target.id, "dislike");
     })
 
 
+    // follow button
     $("#buttonfollow").on("click", follow)
+    
 
-
+    // por defecto, carga la primer pagina de todos los posts
     load_posts("all",1);
 })
     
 
 
+
+
+// this function sends the content of the post to the backend, where it is processed.
 function send_post(e){
 
-    e.preventDefault()
-    const body = $('#bodypost').val();
-    let body2 = body.length
-
-    if(body.length > 141){
-        console.log("manejar este error");
-        return false
-    };
+    e.preventDefault();
+    const body = $('#bodypost')
 
     fetch('/post', {
         method: 'POST',
         body: JSON.stringify({
-            body: body,
+            body: body.val(),
         })
     })
     .then(response => response.json())
     .then(data => {
+        switch(data.message){
+            
+            case "toolong":
+                if(!$("#mssg").length){
+                    body.before("<span id='mssg'>You cannot exceed 141 characters</span>");
+                };
+                break
+            
+            case "tooshort":
+                if(!$("#mssg").length){
+                    body.before("<span id='mssg'>You cannot publish an empty post</span>");
+                };
+                break
 
-    })
-    .catch(err => {
-
+            case "success":
+                $('#bodypost').val('');
+                if($("#mssg")){
+                    $("#mssg").remove()
+                };
+                break
+        };
     });
-
-    $('#bodypost').val('');
-    
 }
 
 
@@ -95,10 +128,12 @@ function load_posts(requestedposts, page){
 
     const container = $('#allpostshere');
     const paginator = $("#postspaginator");
-    paginator.text("")
-
+    
+    // clear the information every time the function is called
+    paginator.text("");
     container.text("");
 
+    // check the requestedpost to show or hide the relevant content
     if(requestedposts == "all" || requestedposts == "following"){
         document.querySelector("#formlayer").style.display = "block";
         document.querySelector("#profilelayer").style.display = "none";
@@ -111,37 +146,23 @@ function load_posts(requestedposts, page){
     .then(response => response.json())
     .then(posts => {
         console.log(posts);
+
+        // posts[0] is the response that contains the data of the posts and likes
         posts[0].forEach(post => {
-            
+
+            let id = post[0].id
+            let username = post[0].username
             let user = $("#thisusernav").text();
             let edit = "";
 
-            if(user == post[0].username){
-                edit = `<button class="editbutton" title="${post[0].id}" id='buttonedit${post[0].id}' title='${post[0].username}'>Edit</button>`
+            // if the authenticated user is the creator of the post, then the edit button appears
+            if(user == username){
+                edit = `<button class="editbutton" title="${id}" id='buttonedit${id}'>Edit</button>`
             };
-
-
-            let status
-
-            switch(post[1].liketype){
-
-                case "like":
-                    status = "buttonlikeon"
-                    break
-
-                case "dislike":
-                    status = "buttonlikeoff"
-                    break
-
-                case "nolike":
-                    status = ""
-                    break
-            };
-            
 
             container.append(
+
                 `
-                
                 <div class="container-fluid border">
                                 <div class="row">
                                     <div class="col-12">
@@ -151,24 +172,22 @@ function load_posts(requestedposts, page){
                                             <div class="text-center">
                                                 <div id="miniavatar" class="d-inline-flex shadow bg-white rounded-circle"></div>
                                                 <p id="postname"><strong>${post[0].firstname + " " + post[0].lastname}</strong></p>
-                                                <p id="postusername" title="${post[0].username}">/${post[0].username}</p>
-                                                
+                                                <p id="postusername" title="${username}">/${username}</p>
                                             </div>
             
-                                                <div id="post${post[0].id}" class="media-body border rounded">
-                                                    <textarea readonly title="${post[0].id}" class="textareapost" id="textareapost${post[0].id}">${post[0].post}</textarea>
-                                                    
-                                                </div>
-                                                
-                                                <div class="" id="likes">
-                                                    <img class="buttonlike ${status == "buttonlikeon" ? status : ''}" id="${post[0].id}" src="/static/network/like.png" alt="">
-                                                    <span id="likescounter${post[0].id}">${post[0].likes}</span>
-                                                    <br>
-                                                    <img class="buttondislike ${status == "buttonlikeoff" ? status : '' }" id="${post[0].id}" src="/static/network/dislike.png" alt="">
-                                                    <span id="dislikescounter${post[0].id}">${post[0].dislikes}</span>
-                                                    <br>
-                                                    <span id="spanbutton${post[0].id}">${edit}</span>
-                                                </div>
+                                            <div id="post${id}" class="media-body border rounded">
+                                                <textarea readonly class="textareapost" maxlength="141" id="textareapost${id}">${post[0].post}</textarea>
+                                            </div>
+                                            
+                                            <div class="" id="likes">
+                                                <img class="buttonlike ${post[1].liketype == 'like' ? 'buttonlikeon' : ''}" id="${id}" src="/static/network/like.png" alt="">
+                                                <span id="likescounter${id}">${post[0].likes}</span>
+                                                <br>
+                                                <img class="buttondislike ${post[1].liketype == 'dislike' ? 'buttonlikeoff' : ''}" id="${id}" src="/static/network/dislike.png" alt="">
+                                                <span id="dislikescounter${id}">${post[0].dislikes}</span>
+                                                <br>
+                                                <span id="spanbutton${id}">${edit}</span>
+                                            </div>
             
                                         </div>
             
@@ -186,21 +205,21 @@ function load_posts(requestedposts, page){
         })
         
         
-
-        for(i=1 ; i <= posts[1]; i++){
+        // posts[1] contain information about the number of pages generated by the paginator
+        for(i=1 ; i < posts[1]; i++){
             if(page == i){
                 paginator.append(
                     `
-                    <li class="page-item active"><a class="page-link" id="pagelink" href="#">${i}</a></li>
+                    <li class="page-item active"><a class="page-link" title="${requestedposts}" id="pagelink" href="#">${i}</a></li>
                     `
                 )
             } else {
                 paginator.append(
                     `
-                    <li class="page-item"><a class="page-link" id="pagelink" href="#">${i}</a></li>
+                    <li class="page-item"><a class="page-link" title="${requestedposts}" id="pagelink" href="#">${i}</a></li>
                     `
                 )
-            }
+            };
             
         };
 
@@ -209,6 +228,7 @@ function load_posts(requestedposts, page){
 }
 
 
+//vista
 function get_user(user){
 
     fetch(`profile/${user}`,{
@@ -221,13 +241,21 @@ function get_user(user){
         $("#followersdesc").text(data.followers);
         $("#followingdesc").text(data.following);
 
-    })
+    });
 
 }
 
 
+/* this function sends a post id and a value (like or dislike) and receives a response. 
+if the answer is like or dislike, change the color of the image and add a like / dislike. 
+if the answer is change, it changes from like to dislike, or vice versa. 
+If the answer is delete, remove the color from the target and subtract a like / dislike */
 function like(id, liketype) {
     
+    const buttonLike = $(`#${id}.buttonlike`);
+    const buttonDislike = $(`#${id}.buttondislike`);
+    const likeSpan = $(`#likescounter${id}`);
+    const dislikeSpan = $(`#dislikescounter${id}`);
 
     fetch('/newlike', {
         method: 'POST',
@@ -241,72 +269,63 @@ function like(id, liketype) {
 
         if (data.like == "like"){
 
-            let boton = $(`#${id}.buttonlike`);
-            let boton2 = $(`#${id}.buttondislike`);
-            let likespan = $(`#likescounter${id}`);
-            let dislikespan = $(`#dislikescounter${id}`);
-            
-            
             switch(data.result){
 
                 case "change":
-                    boton2.removeClass("buttonlikeoff");
-                    boton.addClass("buttonlikeon");
-                    dislikespan.text(`${Number($(`#dislikescounter${id}`).text()) - 1}`)
-                    likespan.text(`${Number($(`#likescounter${id}`).text()) + 1}`)
-                    
+                    buttonDislike.removeClass("buttonlikeoff");
+                    buttonLike.addClass("buttonlikeon");
+                    dislikeSpan.text(`${Number($(`#dislikescounter${id}`).text()) - 1}`);
+                    likeSpan.text(`${Number($(`#likescounter${id}`).text()) + 1}`);
                     break
 
                 case "like":
-                    boton.addClass("buttonlikeon");
-                    likespan.text(`${Number($(`#likescounter${id}`).text()) + 1}`)
+                    buttonLike.addClass("buttonlikeon");
+                    likeSpan.text(`${Number($(`#likescounter${id}`).text()) + 1}`);
                     break
                 
                 case "delete":
-                    boton.removeClass("buttonlikeon");
-                    likespan.text(`${Number($(`#likescounter${id}`).text()) - 1}`);
+                    buttonLike.removeClass("buttonlikeon");
+                    likeSpan.text(`${Number($(`#likescounter${id}`).text()) - 1}`);
                     break
-            };
-
-
-        } else {
-            let boton2 = $(`#${id}.buttonlike`);
-            let boton = $(`#${id}.buttondislike`);
-            let likespan = $(`#likescounter${id}`);
-            let dislikespan = $(`#dislikescounter${id}`);
+            }; 
+            } else {
+            
             switch(data.result){
 
                 case "change":
-                    boton2.removeClass("buttonlikeon");
-                    boton.addClass("buttonlikeoff");
-                    likespan.text(`${Number($(`#likescounter${id}`).text()) - 1}`);
-                    dislikespan.text(`${Number($(`#dislikescounter${id}`).text()) + 1}`);
+                    buttonLike.removeClass("buttonlikeon");
+                    buttonDislike.addClass("buttonlikeoff");
+                    likeSpan.text(`${Number($(`#likescounter${id}`).text()) - 1}`);
+                    dislikeSpan.text(`${Number($(`#dislikescounter${id}`).text()) + 1}`);
                     break
 
                 case "dislike":
-                    boton.addClass("buttonlikeoff");
-                    dislikespan.text(`${Number($(`#dislikescounter${id}`).text()) + 1}`);
+                    buttonDislike.addClass("buttonlikeoff");
+                    dislikeSpan.text(`${Number($(`#dislikescounter${id}`).text()) + 1}`);
                     break
                 
                 case "delete":
-                    boton.removeClass("buttonlikeoff");
-                    dislikespan.text(`${Number($(`#dislikescounter${id}`).text()) - 1}`);
+                    buttonDislike.removeClass("buttonlikeoff");
+                    dislikeSpan.text(`${Number($(`#dislikescounter${id}`).text()) - 1}`);
                     break
-            }
-        }
-
-    })
+            };
+        };
+    });
 
 }
 
 
-
+// vista
 function follow(){
 
+    // get data
     const follower = $("#thisusernav").text();
     const followed = $("#usernamedesc").text();
 
-    fetch("follow", {
+    // instance for change dinamically the number of followers
+    let followers = $("#followersdesc");
+
+    fetch("following", {
         method: "POST",
         body: JSON.stringify({
             follower: follower,
@@ -315,17 +334,12 @@ function follow(){
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data);
-        let followers = $("#followersdesc")
-        let following = $("#followingdesc")
-        let buttonfollow = $("buttonfollow")
-
-
+        
+        // process the response
         switch(data.message){
-
             case "sameuser":
                 break
-            
+
             case "delete":
                 followers.text(`${Number(followers.text()) - 1}`);
                 break
@@ -333,16 +347,12 @@ function follow(){
             case "successful":
                 followers.text(`${Number(followers.text()) + 1}`);
                 break
-
+            
             case "error":
-                console.log("an error ocurred");
-                break
-
-        }
-
-    })
-
-}
+                console.log("error when trying to instantiate users");
+        };
+    });
+};
 
 
 
@@ -350,12 +360,14 @@ function edit_post(id){
 
     const post = $(`#textareapost${id}`)
     const buttoncontainer = $(`#spanbutton${id}`)
-    const button = $(`#buttonedit${id}`)
 
-    buttoncontainer.html(`<button class="editbutton" title="${id}" id='buttonsave${id}'>Save</button>`)
-    post.removeAttr("readonly")
+    const buttonEdit = `<button class="editbutton" title="${id}" id='buttonedit${id}'>Edit</button>`
+    const buttonSave = `<button class="editbutton" title="${id}" id='buttonsave${id}'>Save</button>`
 
-    const buttonsave = $(`#buttonsave${id}`)
+    buttoncontainer.html(buttonSave) // change edit button to the save button
+    post.removeAttr("readonly") // makes the textarea editable
+
+    const buttonsave = $(`#buttonsave${id}`) // select the recently created save button
 
     buttonsave.on("click", () => {
         
@@ -367,15 +379,31 @@ function edit_post(id){
         })
         .then(response => response.json())
         .then(data => {
-            console.log(data);
-            post.attr("readonly", true);
-            button.text("Edit");
-            post.text(data.text);
-            buttoncontainer.html(button)
-        });
 
-        
-    })
+            switch(data.message){
+
+                case "toolong":
+                    if(!$("#msg").length){
+                        post.before("<span id='msg'>You cannot exceed 141 characters</span>");
+                    };
+                    break
+                
+                case "tooshort":
+                    if(!$("#msg").length){
+                        post.before("<span id='msg'>You cannot publish an empty post</span>");
+                    };
+                    break
+
+                case "success":
+                    post.attr("readonly", true);  // makes the textarea non editable again    
+                    buttoncontainer.html(buttonEdit); // change save button for edit button again
+                    if($("#msg")){
+                        $("#msg").remove()
+                    };
+                    break
+            };
+        });
+    });
     
 }
 
@@ -388,7 +416,8 @@ function edit_post(id){
 
 // Intentar hackear edit posts, simular peticion PUT con el id del post
 
+// se puede enviar posts vacios, ver eso
 
-// ya funciona el paginador, hay que poner el control en el html y crear una funcion nueva en js que llame
+// editando, se puede conseguir mas de 141 caracteres
 
-// la idea es crear el paginador dinamicamente de acuerdo al numero de posts disponibles
+// los posts de perfil no se cargan en orden de publicacion, los de following no se
