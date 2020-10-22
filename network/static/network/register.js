@@ -6,7 +6,6 @@ $(document).ready(function () {
         e.preventDefault()
         register_control()
     })
-
 });
 
 
@@ -18,6 +17,7 @@ function register_control() {
     const email = $("#email")
     const password = $("#password")
     const confirmation = $("#confirmation")
+    const image = $("#image")
 
     if (firstname.val() == ""){
         firstname.addClass('pholder');
@@ -38,7 +38,8 @@ function register_control() {
     if (password.val() != confirmation.val()){
         confirmation.after("Passwords must be match");
     }
-
+    
+    
     if (firstname.val() != "" & lastname.val() != "" & username.val() != "" & email.val() != "" & password.val() != "" & password.val() == confirmation.val()){
         
         fetch("/register", {
@@ -49,7 +50,8 @@ function register_control() {
                 username: username.val(),
                 email: email.val(),
                 password: password.val(),
-                confirmation: confirmation.val()
+                confirmation: confirmation.val(),
+                image: image.val()
             })
         })
         .then(response => response.json())

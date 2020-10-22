@@ -3,7 +3,7 @@ from django.db import models
 
 
 class User(AbstractUser):
-    pass
+    image = models.CharField(max_length=200, blank=True)
     
 
 
@@ -23,6 +23,7 @@ class Post(models.Model):
             "date": self.timestamp.strftime("%b %-d %Y, %-I:%M %p"),
             "likes": len(self.thispost.filter(like=True)),
             "dislikes": len(self.thispost.filter(like=False)),
+            "avatar": self.fk_user.image
         }
 
 

@@ -12,7 +12,6 @@ from .models import User, Post, Follow, Like
 
 
 def index(request):
-
     return render(request, "network/index.html")
 
 
@@ -44,12 +43,17 @@ def logout_view(request):
 def register(request):
     if request.method == "POST":
 
+        # get data
         data = json.loads(request.body)
-
         username = data.get("username","")
         email = data.get("email","")
         firstname = data.get("firstname","")
         lastname = data.get("lastname","")
+        image = data.get("image","")
+
+        # si no hay imagen, setear la imagen por default
+        if image == "":
+            image = "/static/network/avatar.png"
 
         # Ensure password matches confirmation
         password = data.get("password","")
@@ -62,6 +66,7 @@ def register(request):
             
             try:
                 user = User.objects.create_user(username, email, password)
+                user.image = image
                 user.first_name = firstname
                 user.last_name = lastname
                 user.save()
@@ -71,7 +76,6 @@ def register(request):
             login(request, user)
             return JsonResponse({"message": "successful"})
         else:
-            
             return JsonResponse({"message": "blankfields"})
     else:
         return render(request, "network/register.html")
@@ -86,22 +90,25 @@ def new_post(request):
         return JsonResponse({'error': 'The request must be via POST'})
 
     # get data
-    data = json.loads(request.body)
-    body = data.get('body','')
-    
-    # a simple check, just in case if someone tries to modify the value of the form
-    if len(body) > 141:
-        return JsonResponse({"message": "toolong"})
-    elif len(body) < 1:
-        return JsonResponse({"message": "tooshort"})
-    else:
-        post = Post(
-            post = body,
-            fk_user = request.user
-        )
-        post.save()
+    if request.user.is_authenticated:
+        data = json.loads(request.body)
+        body = data.get('body','')
+        
+        # a simple check, just in case if someone tries to modify the value of the form
+        if len(body) > 141:
+            return JsonResponse({"message": "toolong"})
+        elif len(body) < 1:
+            return JsonResponse({"message": "tooshort"})
+        else:
+            post = Post(
+                post = body,
+                fk_user = request.user
+            )
+            post.save()
 
-    return JsonResponse({"message": "success"})
+        return JsonResponse({"message": "success"})
+    else:
+        return JsonResponse({"message": "forbidden"})
 
 
 
@@ -166,6 +173,7 @@ def get_posts(request, postedby, page):
     return JsonResponse(response, safe=False)
 
 
+
 @csrf_exempt
 def get_post(request, post_id):
 
@@ -181,24 +189,27 @@ def get_post(request, post_id):
         post = Post.objects.get(id=post_id)
     except:
         print("Error when trying instancing object post")
-
+    
     liketype = ""
-
+    
     # if the user is editing the post, he receives the value of the post and updates it
     if request.method == "PUT":
+        if request.user.username == post.fk_user.username:
+            print("adentro de user")
+            # get data
+            data = json.loads(request.body)
+            textpost = data.get("post", "") # get the new text
 
-        # get data
-        data = json.loads(request.body)
-        textpost = data.get("post", "") # get the new text
-
-        if len(textpost) > 141:
-            return JsonResponse({"message": "toolong"})
-        elif len(textpost) < 1:
-            return JsonResponse({"message": "tooshort"})
+            if len(textpost) > 141:
+                return JsonResponse({"message": "toolong"})
+            elif len(textpost) < 1:
+                return JsonResponse({"message": "tooshort"})
+            else:
+                post.post = textpost
+                post.save()
+                return JsonResponse({"message": "success"})
         else:
-            post.post = textpost
-            post.save()
-            return JsonResponse({"message": "success"})
+            return JsonResponse({"message": "forbidden"})
 
     try:
         getlike = post.thispost.get(fk_userliked=request.user)
@@ -290,12 +301,20 @@ def user_profile(request, user_name):
         # if requested user exists
         try:
             this_user = User.objects.get(username=user_name)
-            
+            print(this_user)
+            if Follow.objects.filter(fk_followed=this_user, fk_follower=request.user):
+                followstatus="follow"
+            else:
+                followstatus="nofollow"
+
             return JsonResponse({
                 "fullname": this_user.get_full_name(),
                 "username": this_user.username,
                 "followers": len(this_user.thisfollowed.all()),
-                "following": len(this_user.thisfollower.all())
+                "following": len(this_user.thisfollower.all()),
+                "avatar": this_user.image,
+                "currentuser": request.user.username,
+                "followstatus": followstatus
             })
         # if requested user doesn't exists
         except:
@@ -342,49 +361,3 @@ def follow(request):
             return JsonResponse({"message":"successful"})
 
     return HttpResponseRedirect(reverse("index"))
-
-
-
-
-
-''' quiza este sea
-for i in posts:
-                    
-                    if i.thispost.filter(fk_userliked=request.user):
-                        # instance
-                        getlike = i.thispost.get(fk_userliked=request.user)
-                        if getlike.like == True:
-                            liketype = {"liketype": "like"}
-                        elif getlike.like == False:
-                            liketype = {"liketype": "dislike"}
-                    else:
-                        liketype = {"liketype": "nolike"}
-
-                    postlist.append([Post.serialize(i),liketype])
-'''
-
-
-
-
-
-'''
-if postedby == "all":
-        
-        posts = Post.objects.all().order_by('-timestamp')
-        
-        for i in posts:
-            
-            if request.user.is_authenticated and i.thispost.filter(fk_userliked=request.user):
-                
-                # instance
-                getlike = i.thispost.get(fk_userliked=request.user)
-                if getlike.like == True:
-                    liketype = {"liketype": "like"}
-                elif getlike.like == False:
-                    liketype = {"liketype": "dislike"}
-            else:
-                liketype = {"liketype": "nolike"}
-            
-            postlist.append([Post.serialize(i),liketype])
-
-'''

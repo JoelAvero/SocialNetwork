@@ -1,50 +1,112 @@
-
-
-#avatar {
-    background-image: url('https://www.andalucialab.org/wp-content/uploads/2020/02/INSERTAR_LOGO2-768x576.jpg');
-    height: 125px;
-    width: 125px;
+.miniavatar {
+    background-image: url('avatar.png');
+    height: 80px;
+    width: 80px;
     background-repeat: no-repeat;
     background-position: 50%;
     border-radius: 50%;
     background-size: auto 100%;
-}
-
-#miniavatar {
-    background-image: url('https://ep01.epimg.net/elpais/imagenes/2019/05/02/gente/1556804013_342866_1556804719_noticia_normal.jpg');
-    height: 60px;
-    width: 60px;
-    background-repeat: no-repeat;
-    background-position: 50%;
-    border-radius: 50%;
-    background-size: auto 100%;
+    border: 1px solid rgba(0, 0, 0, 0.438);
 }
 
 #avatarprofile {
-    background-image: url('https://ep01.epimg.net/elpais/imagenes/2019/05/02/gente/1556804013_342866_1556804719_noticia_normal.jpg');
+    background-image: url('avatar.png');
     height: 200px;
     width: 200px;
     background-repeat: no-repeat;
     background-position: 50%;
     border-radius: 50%;
     background-size: auto 100%;
+    margin: 20px 0px;
+    border: 1px solid rgba(0, 0, 0, 0.438);
 }
 
-#allposts {
-    height: 400px;
+/* layout */
+.navbar {
+    z-index: 1;
+    background-color: rgb(235, 255, 252);
+    width: 100%;
+    position: fixed;
+    top: 0px;
+}
+
+.navpaginator {
+    margin-bottom: auto;
+    margin-top: 15px;
+}
+
+.formlayer, .profilelayer, .divlogin, .divregister {
+    margin-top: 75px;
+    margin-bottom: 15px;
+    background-color: rgb(235, 255, 252);
+    border-radius: 20px;
+}
+
+.pholder::placeholder{
+    color: red;
+    opacity: 1;
+    font-weight: bold;
+}
+
+
+/* post */
+.supercontainer {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.075);
+}
+
+.postcontainer1 {
+    margin-right: 15px;
+    padding-top: 15px;
+}
+.postcontainer2 {
+    margin-top: 20px;
+}
+.postcontainer3{
+    width: 50px;
+    margin-left: 15px;
+}
+
+#postname, #postusername {
+    width: 150px;
+    word-wrap: break-word;
 }
 
 #postname {
-    font-size: 14px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#postname:hover, .miniavatar:hover, #postusername:hover{
+    cursor: pointer;
 }
 
 #postusername {
-    font-size: 16px;
+    margin-top: -17px;
 }
 
+.textareapost {
+    border: 0px;
+    resize: none;
+    width: 100%;
+    font-size: 18px;
+    padding: 8px;
+}
+.textareapost:hover {
+    cursor: default;
+}
 
 .buttonlike, .buttondislike {
-    height: 25px;
+    margin: 2px;
+}
+
+.editbutton {
+    margin-top: 15px;
+}
+
+.buttonlike, .buttondislike {
+    height: 30px;
 }
 
 .buttonlikeon {
@@ -55,16 +117,50 @@
     filter: invert(0.4) sepia(1) hue-rotate(-50deg) saturate(1000%);
 }
 
-.pholder::placeholder{
-    color: red;
-    opacity: 1;
+#likes {
+    width: 75px;
+}
+
+.date{
+    font-size: 15px;
+    font-weight: 550;
+}
+
+/* createpost */
+
+#bodypost {
+    resize: none;
+    margin-bottom: 10px;
+}
+
+#buttonsubmit {
+    width: 150px;
+    margin: 5px 0px 15px 0px;
+}
+
+#newpost {
+    margin-top: 10px;
+    font-family: Arial, Helvetica, sans-serif;
     font-weight: bold;
 }
 
-.textareapost {
-    border: 0px;
-    resize: none;
-    width: 100%;
+/* profile */
+
+#fullnamedesc{
+    margin-top: 20px;
+    font-weight: bolder;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
 }
-
-
+#usernamedesc{
+    margin-top: 10px;
+    font-size: 30px;
+}
+#pfollowers{
+    margin-left: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    font-style: italic;
+}
+#buttonfollow{
+    width: 125px;
+}

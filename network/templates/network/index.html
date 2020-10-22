@@ -5,40 +5,21 @@
     <!-- parte que deberia quedar quieta -->
     {% if user.is_authenticated %}
     <div class="container-fluid" id="formlayer">
-        <div class="row">
+        <div class="row justify-content-center">
 
-            <!-- lado izquierdo avatar info user -->
-            <div class="col-3 border">
-                <div class="container" id="containeruser">
-                    <div class="row">
-
-                        <div class="col-4">
-                            <div id="avatar" class="d-inline-flex shadow bg-white rounded-circle"></div>
-                        </div>
-
-                        <div class="col-8 text-justify align-self-baseline">
-                            <h5>Nombre</h5>
-                            <p>HOla soy un parrafo</p>
-                        </div>
-
-                    </div>    
-                </div>
-            </div>
-
-            <!-- zona de createpost -->
-            <div class="col-6 border">
+            <div class="col-6 border formlayer rounded shadow">
                 <div class="container-fluid" id="createpost">
                     <div class="row">
 
                         <div class="col-12">
-                            <h1>New Post:</h1>
+                            <h1 id="newpost">New Post:</h1>
                         </div>
 
                         <div class="col-12">
                             <form id='formpost'>
                                 <div class="form-group">
                                     <textarea id="bodypost" maxlength="141" class="form-control" placeholder="What are you feeling?"></textarea>
-                                    <button type="submit" class="btn btn-primary float-right">Post</button>
+                                    <button type="submit" id="buttonsubmit" class="btn btn-primary float-right">Post</button>
                                 </div>
                             </form>
                         </div>
@@ -52,15 +33,10 @@
     </div>
     {% else %}
     <div class="container-fluid" id="formlayer">
-        <div class="row">
 
-            <!-- lado izquierdo avatar info user -->
-            <div class="col-3 border">
-                
-            </div>
+        <div class="row justify-content-center">
 
-            <!-- zona de createpost -->
-            <div class="col-6 border">
+            <div class="col-6 border formlayer rounded shadow">
                 <div class="container-fluid" id="createpost">
                     <div class="row">
 
@@ -79,37 +55,35 @@
     </div>
     {% endif %}
     
-    <div class="container-fluid" id="profilelayer">
-        <div class="row">
 
-            <!-- lado izquierdo avatar info user -->
-            <div class="col-3 border">
-                
-            </div>
+    <div class="container-fluid" id="profilelayer">
+        <div class="row justify-content-center">
 
             <!-- zona de perfil -->
-            <div class="col-6 border">
+            <div class="col-6 border profilelayer rounded shadow">
                 <div class="container-fluid" id="createpost">
-                    <div class="row">
 
-                        
-                        <div class="col-3">
+                    <div class="row align-items-center">
+
+                        <div class="col-3 profilecontainer1">
                             <div id="avatarprofile" class="d-inline-flex shadow bg-white rounded-circle"></div>
                         </div>
-                        <div class="col-7">
+
+                        <div class="col-7 profilecontainer2 align-self-start">
                             <h1 id="fullnamedesc"></h1>
                             <h6 id="usernamedesc"></h6>
                         </div>
-                        <div class="col-2">
 
-                            <p>Followers: <span id="followersdesc">0</span></p>
-                            <p>Following: <span id="followingdesc">0</span></p>
+                        <div class="col-2 profilecontainer3">
+                            <p id="pfollowers">Followers: <span id="followersdesc">0</span></p>
+                            <p id="pfollowers">Following: <span id="followingdesc">0</span></p>
                             {% if user.is_authenticated %}
-                            <button id="buttonfollow">Follow</button>
+                            <button class="btn btn-primary" id="buttonfollow">Follow</button>
                             {% endif %}
-
                         </div>
+
                     </div>
+
                 </div>
             </div>
 
@@ -118,47 +92,25 @@
     </div>
 
 
-
-
     <!-- parte que deberia poder ser scrolleada -->
-    <div class="container-fluid">
-        
-        <div class="row">
-
-            <!-- no se usa -->
-            <div class="col-3"></div>
-            
+    <div class="container-fluid" id="allpostshere">
             <!-- zona de post -->
-            <div class="col-6 border" id="allpostshere">
-                <!-- posts here -->
-                
-                
-
-            </div>
-
-        </div>
-
     </div>
 
 
     <!-- paginator -->
     <div class="container-fluid">
-        
-        <div class="row">
 
-            
-            <div class="col-3"></div>
-            
-            
-            <div class="col-6 border" id="allpostshere">
+        <div class="row justify-content-center">
+
+            <div class="col-6 border shadow" id="paginatorhere">
                 
-                <nav aria-label="..." >
+                <nav aria-label="..." class="navpaginator">
                     <ul id="postspaginator" class="pagination pagination-sm justify-content-center">
                         
                     </ul>
                 </nav>
                 
-
             </div>
 
         </div>

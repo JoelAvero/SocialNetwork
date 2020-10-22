@@ -1,7 +1,7 @@
 {% extends "network/layout.html" %}{% load static %}
 
 {% block body %}
-
+<div class="divregister">
     <h2>Register</h2>
 
     {% if message %}
@@ -28,11 +28,14 @@
         <div class="form-group">
             <input class="form-control" id="confirmation" type="password" name="confirmation" placeholder="Confirm Password">
         </div>
+        <div class="form-group">
+            <input class="form-control" id="image" type="url" name="image" placeholder="URL image link">
+        </div>
         <input class="btn btn-primary" type="submit" value="Register">
     </form>
 
     Already have an account? <a href="{% url 'login' %}">Log In here.</a>
-
+</div>
 {% endblock %}
 
 {% block script %}
