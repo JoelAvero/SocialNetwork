@@ -5,7 +5,18 @@
     <!-- parte que deberia quedar quieta -->
     {% if user.is_authenticated %}
     <div class="container-fluid" id="formlayer">
-        <div class="row justify-content-center">
+        <div class="row justify-content-left">
+
+            <div class="col-3 adminpanel">
+                {% if user.is_superuser %}
+                <div class="text-center">
+                    <p><strong>Test panel, only for superusers</strong></p>
+                    <button id="createuser" class="btn btn-primary">Create user</button>
+                
+                    <button id="createposts" class="btn btn-primary">Create Posts</button>
+                </div>
+                {% endif %}
+            </div>
 
             <div class="col-6 border formlayer rounded shadow">
                 <div class="container-fluid" id="createpost">
@@ -55,6 +66,7 @@
     </div>
     {% endif %}
     
+    
 
     <div class="container-fluid" id="profilelayer">
         <div class="row justify-content-center">
@@ -78,7 +90,9 @@
                             <p id="pfollowers">Followers: <span id="followersdesc">0</span></p>
                             <p id="pfollowers">Following: <span id="followingdesc">0</span></p>
                             {% if user.is_authenticated %}
-                            <button class="btn btn-primary" id="buttonfollow">Follow</button>
+                            <div id="buttonfollowspan">
+                                
+                            </div>
                             {% endif %}
                         </div>
 

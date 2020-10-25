@@ -41,6 +41,9 @@
     background-color: rgb(235, 255, 252);
     border-radius: 20px;
 }
+.adminpanel{
+    margin-top: 75px;
+}
 
 .pholder::placeholder{
     color: red;

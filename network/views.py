@@ -7,17 +7,19 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
+from django.contrib.admin.views.decorators import staff_member_required
 
 from .models import User, Post, Follow, Like
 
+import random
 
 def index(request):
     return render(request, "network/index.html")
 
 
+
 def login_view(request):
     if request.method == "POST":
-
         # Attempt to sign user in
         username = request.POST["username"]
         password = request.POST["password"]
@@ -35,11 +37,13 @@ def login_view(request):
         return render(request, "network/login.html")
 
 
+
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
 
-@csrf_exempt
+
+
 def register(request):
     if request.method == "POST":
 
@@ -81,8 +85,7 @@ def register(request):
         return render(request, "network/register.html")
 
 
-#vista
-@csrf_exempt
+
 def new_post(request):
 
     # request is POST?
@@ -124,7 +127,7 @@ def get_posts(request, postedby, page):
 
     postlist = []
     posts =[]
-    NUMBERPOSTSPERPAGE = 2
+    NUMBERPOSTSPERPAGE = 10
 
     # if "postedby" is "all", then show all the posts
     if postedby == "all":
@@ -174,7 +177,6 @@ def get_posts(request, postedby, page):
 
 
 
-@csrf_exempt
 def get_post(request, post_id):
 
     '''
@@ -195,7 +197,7 @@ def get_post(request, post_id):
     # if the user is editing the post, he receives the value of the post and updates it
     if request.method == "PUT":
         if request.user.username == post.fk_user.username:
-            print("adentro de user")
+            
             # get data
             data = json.loads(request.body)
             textpost = data.get("post", "") # get the new text
@@ -223,8 +225,7 @@ def get_post(request, post_id):
     return JsonResponse([Post.serialize(post), {"status": liketype}], safe=False)
 
 
-#vista
-@csrf_exempt
+
 def new_like(request):
 
     if request.method == 'POST':
@@ -293,38 +294,34 @@ def new_like(request):
 
     return HttpResponseRedirect(reverse("index"))
 
-#vista, aca hay que ver para que con get se pueda entrar al perfil
-@csrf_exempt
+
+
 def user_profile(request, user_name):
     
-    if request.method == "POST":
-        # if requested user exists
-        try:
-            this_user = User.objects.get(username=user_name)
-            print(this_user)
-            if Follow.objects.filter(fk_followed=this_user, fk_follower=request.user):
-                followstatus="follow"
-            else:
-                followstatus="nofollow"
+    # if requested user exists
+    try:
+        this_user = User.objects.get(username=user_name)
+        
+        if Follow.objects.filter(fk_followed=this_user, fk_follower=request.user):
+            followstatus="follow"
+        else:
+            followstatus="nofollow"
 
-            return JsonResponse({
-                "fullname": this_user.get_full_name(),
-                "username": this_user.username,
-                "followers": len(this_user.thisfollowed.all()),
-                "following": len(this_user.thisfollower.all()),
-                "avatar": this_user.image,
-                "currentuser": request.user.username,
-                "followstatus": followstatus
-            })
-        # if requested user doesn't exists
-        except:
-            return HttpResponseRedirect(reverse('index'))
-            
-    return JsonResponse({})
+        return JsonResponse({
+            "fullname": this_user.get_full_name(),
+            "username": this_user.username,
+            "followers": len(this_user.thisfollowed.all()),
+            "following": len(this_user.thisfollower.all()),
+            "avatar": this_user.image,
+            "currentuser": request.user.username,
+            "followstatus": followstatus
+        })
+    # if requested user doesn't exists
+    except:
+        return HttpResponseRedirect(reverse('index'))
 
 
-#vista
-@csrf_exempt
+
 def follow(request):
 
     if request.method == "POST":
@@ -361,3 +358,69 @@ def follow(request):
             return JsonResponse({"message":"successful"})
 
     return HttpResponseRedirect(reverse("index"))
+
+
+
+
+# these two functions are for testing purposes only
+@staff_member_required
+@csrf_exempt
+def create_user(request):
+    
+    if request.method == "POST":
+
+        # get data
+        data = json.loads(request.body)
+        username = data.get("username","")
+        email = data.get("email","")
+        firstname = data.get("firstname","")
+        lastname = data.get("lastname","")
+        image = data.get("image","")
+        password = data.get("password","")
+        confirmation = data.get("confirmation","")
+
+        if image == "":
+            image = "/static/network/avatar.png"
+            
+        try:
+            user = User.objects.create_user(username, email, password)
+            user.image = image
+            user.first_name = firstname
+            user.last_name = lastname
+            user.save()
+        except IntegrityError:
+            return JsonResponse({"message": "integrityerror"})
+    
+        return JsonResponse({"message": "successful"})
+
+    else:
+        return render(request, "network/register.html")
+@staff_member_required
+@csrf_exempt
+def create_posts(request):
+    
+    # request is POST?
+    if request.method != 'POST':
+        return JsonResponse({'error': 'The request must be via POST'})
+
+    NUMBEROFPOSTS = 10
+    
+    users = User.objects.all()
+    # get data
+    if request.user.is_authenticated:
+        data = json.loads(request.body)
+        body = data.get('body','')
+        
+        for i in range(NUMBEROFPOSTS):
+            
+            user = User.objects.get(id=random.randint(1,len(users)))
+
+            post = Post(
+                post = body,
+                fk_user = user
+            )
+            post.save()
+
+        return JsonResponse({"message": "success"})
+    else:
+        return JsonResponse({"message": "forbidden"})

@@ -9,15 +9,33 @@ $(document).ready(function () {
 });
 
 
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
 function register_control() {
 
-    const firstname = $("#firstname")
-    const lastname = $("#lastname")
-    const username = $("#username")
-    const email = $("#email")
-    const password = $("#password")
-    const confirmation = $("#confirmation")
-    const image = $("#image")
+    const firstname = $("#firstname");
+    const lastname = $("#lastname");
+    const username = $("#username");
+    const email = $("#email");
+    const password = $("#password");
+    const confirmation = $("#confirmation");
+    const image = $("#image");
+    const csrftoken = getCookie('csrftoken');
 
     if (firstname.val() == ""){
         firstname.addClass('pholder');
@@ -44,6 +62,7 @@ function register_control() {
         
         fetch("/register", {
             method: "POST",
+            headers: { "X-CSRFToken": csrftoken },
             body: JSON.stringify({
                 firstname: firstname.val(),
                 lastname: lastname.val(),

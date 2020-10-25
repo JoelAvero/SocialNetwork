@@ -4,18 +4,6 @@ document.addEventListener('DOMContentLoaded', function() {
     $("#formpost").on('submit', send_post)
 
 
-    // esto sirve para ir al perfil del usuario por medio de /#profile/username
-    window.onhashchange = () => {
-        const url = window.location.hash
-
-        if(url.indexOf("profile/") !== -1){
-            let user = url.substr(9)
-            load_posts(user,1);
-            get_user(user);
-        };
-    };
-
-
     // user logged profile
     $("#navuser").on("click", e => {
         const thisuser = $("#thisusernav").text()
@@ -70,27 +58,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // follow
-    $("#buttonfollow").on("click", () =>{
-
-        const buttonfollow = $("#buttonfollow")
-
-        switch(buttonfollow.text()){
-            case "Follow":
-                buttonfollow.text("Following");
-                break
-            case "Following":
-                buttonfollow.text("Follow");    
-                break
-        };
+    $("body").on("click", "#buttonfollow", () =>{
+        
         follow();
     })
 
 
+    // only for superusers 
+    $("#createuser").on("click", createuser);
+    $("#createposts").on("click", createposts);
+
+
     // by default load the first page of all post
     load_posts("all",1);
-})
-    
+});
 
+
+// this serves to capture the csrf token (taken from Django documentation)
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+};
 
 
 // this function sends the content of the post to the backend, where it is processed.
@@ -98,9 +97,11 @@ function send_post(e){
 
     e.preventDefault();
     const body = $('#bodypost');
+    const csrftoken = getCookie('csrftoken');
 
     fetch('/post', {
         method: 'POST',
+        headers: { "X-CSRFToken": csrftoken },
         body: JSON.stringify({
             body: body.val(),
         })
@@ -131,7 +132,8 @@ function send_post(e){
         };
     });
     
-}
+};
+
 
 
 function load_posts(requestedposts, page){
@@ -156,7 +158,6 @@ function load_posts(requestedposts, page){
     fetch(`getposts/${requestedposts}/${page}`)
     .then(response => response.json())
     .then(posts => {
-        console.log(posts);
 
         // posts[0] is the response that contains the data of the posts and likes
         posts[0].forEach(post => {
@@ -234,19 +235,27 @@ function load_posts(requestedposts, page){
             };
             
         };
+        if(posts[1] == 1){
+            $("#paginatorhere").css("display", "none")
+        } else {
+            $("#paginatorhere").css("display", "block")
+        };
+
     });
-    container.fadeIn(1000)
-}
+    container.fadeIn(2000)
+};
 
 
-//vista
+
 function get_user(user){
 
-    const buttonfollow = $("#buttonfollow")
+    const buttonfollow = $("#buttonfollow");
+    const buttonfollowspan = $("#buttonfollowspan")
+    const $follow = `<button class="btn btn-primary" id="buttonfollow">Follow</button>`;
+    const $following = `<button class="btn btn-success" id="buttonfollow">Following</button>`;
+    
 
-    fetch(`profile/${user}`,{
-        method: "POST"
-    })
+    fetch(`profile/${user}`)
     .then(response => response.json())
     .then(data => {
         $("#fullnamedesc").text(data.fullname);
@@ -255,21 +264,23 @@ function get_user(user){
         $("#followingdesc").text(data.following);
         $("#avatarprofile").css("backgroundImage",`url(${data.avatar})`);
 
-        if(data.currentuser == data.username){
-            buttonfollow.css("display","none");
+        if(data.followstatus == "follow"){
+            buttonfollowspan.html($following);
         } else {
-            buttonfollow.css("display","block");
+            buttonfollowspan.html($follow);
         };
 
-        if(data.followstatus == "follow"){
-            buttonfollow.text("Following")
+        if(data.currentuser == data.username){
+            buttonfollowspan.css("display","none");
         } else {
-            buttonfollow.text("Follow")
-        }
+            buttonfollowspan.css("display","block");
+        };
+
+        
     });
     
 
-}
+};
 
 
 /* this function sends a post id and a value (like or dislike) and receives a response. 
@@ -282,9 +293,11 @@ function like(id, liketype) {
     const buttonDislike = $(`#${id}.buttondislike`);
     const likeSpan = $(`#likescounter${id}`);
     const dislikeSpan = $(`#dislikescounter${id}`);
+    const csrftoken = getCookie('csrftoken');
 
     fetch('/newlike', {
         method: 'POST',
+        headers: { "X-CSRFToken": csrftoken },
         body: JSON.stringify({
             postid: id,
             liketype: liketype
@@ -338,21 +351,26 @@ function like(id, liketype) {
         };
     });
 
-}
+};
 
 
-// vista
+
 function follow(){
 
+    const buttonfollow = $("#buttonfollow");
+    const buttonfollowspan = $("#buttonfollowspan");
+    
     // get data
     const follower = $("#thisusernav").text();
     const followed = $("#usernamedesc").text();
+    const csrftoken = getCookie('csrftoken');
 
     // instance for change dinamically the number of followers
     let followers = $("#followersdesc");
-
+    
     fetch("following", {
         method: "POST",
+        headers: { "X-CSRFToken": csrftoken },
         body: JSON.stringify({
             follower: follower,
             followed: followed
@@ -372,20 +390,27 @@ function follow(){
 
             case "successful":
                 followers.text(`${Number(followers.text()) + 1}`);
+                
                 break
             
             case "error":
                 console.log("error when trying to instantiate users");
         };
     });
+    if(buttonfollow.text() == "Follow"){
+        buttonfollowspan.html(`<button class="btn btn-success" id="buttonfollow">Following</button>`);
+    } else {
+        buttonfollowspan.html(`<button class="btn btn-primary" id="buttonfollow">Follow</button>`);  
+    };
 };
 
 
 
 function edit_post(id){
 
-    const post = $(`#textareapost${id}`)
-    const buttoncontainer = $(`#spanbutton${id}`)
+    const post = $(`#textareapost${id}`);
+    const buttoncontainer = $(`#spanbutton${id}`);
+    const csrftoken = getCookie('csrftoken');
 
     const buttonEdit = `<button class="btn btn-primary editbutton" title="${id}" id='buttonedit${id}'>Edit</button>`
     const buttonSave = `<button class="btn btn-primary editbutton" title="${id}" id='buttonsave${id}'>Save</button>`
@@ -399,6 +424,7 @@ function edit_post(id){
         
         fetch(`getpost/${id}`, {
             method: "PUT",
+            headers: { "X-CSRFToken": csrftoken },
             body: JSON.stringify({
                 post: post.val()
             })
@@ -431,4 +457,49 @@ function edit_post(id){
         });
     });
     
-}
+};
+
+
+
+
+// these two functions are for testing purposes only
+// each time the "create user" button is pressed (only for super users) a random user is created
+function createuser(){
+
+    const csrftoken = getCookie('csrftoken');
+    
+    fetch("https://randomuser.me/api/")
+    .then(resp => resp.json())
+    .then(data => {
+        
+        fetch("/createuser", {
+            method: "POST",
+            headers: { "X-CSRFToken": csrftoken },
+            body: JSON.stringify({
+                firstname: data.results[0].name.first,
+                lastname: data.results[0].name.last, 
+                username: data.results[0].login.username,
+                email: data.results[0].email,
+                password: data.results[0].login.password,
+                confirmation: data.results[0].login.password,
+                image: data.results[0].picture.medium
+            })
+        })
+    })
+};
+
+// each time the "create posts" button is pressed, 100 posts are created with the word "TEST" from random users
+function createposts(){
+
+    const csrftoken = getCookie('csrftoken');
+
+    fetch('/createposts', {
+        method: 'POST',
+        headers: { "X-CSRFToken": csrftoken },
+        body: JSON.stringify({
+            body: "TEST",
+        })
+    })
+
+
+};
